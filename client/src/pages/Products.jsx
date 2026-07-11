@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import ProductCard from '../components/ProductCard';
 import { Search, Filter } from 'lucide-react';
 
@@ -25,7 +25,7 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
+      const res = await api.get('/api/products');
       setProducts(res.data);
       setFilteredProducts(res.data);
     } catch (error) {

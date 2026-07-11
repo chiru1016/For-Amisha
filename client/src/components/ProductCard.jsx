@@ -6,7 +6,7 @@ import { WishlistContext } from '../context/WishlistContext';
 import { AuthContext } from '../context/AuthContext';
 import StarRating from './StarRating';
 import { getImageUrl } from '../utils/image';
-import axios from 'axios';
+import api from '../api';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useContext(CartContext);
@@ -19,7 +19,7 @@ const ProductCard = ({ product }) => {
 
   useEffect(() => {
     // Fetch rating summary for this product
-    axios.get(`/api/products/${product._id}/reviews`)
+    api.get(`/api/products/${product._id}/reviews`)
       .then(res => setRatingData({ avgRating: res.data.avgRating, count: res.data.count }))
       .catch(() => {}); // silently fail — not critical
   }, [product._id]);

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from './AuthContext';
 
 export const WishlistContext = createContext();
@@ -21,7 +21,7 @@ export const WishlistProvider = ({ children }) => {
 
   const fetchWishlist = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/wishlist');
+      const res = await api.get('/api/wishlist');
       setWishlistItems(res.data);
       setWishlistIds(new Set(res.data.map(p => p._id)));
     } catch (error) {
@@ -37,12 +37,12 @@ export const WishlistProvider = ({ children }) => {
     try {
       if (isWishlisted(product._id)) {
         // Remove
-        const res = await axios.delete(`http://localhost:5000/api/wishlist/${product._id}`);
+        const res = await api.delete(`/api/wishlist/${product._id}`);
         setWishlistItems(res.data);
         setWishlistIds(new Set(res.data.map(p => p._id)));
       } else {
         // Add
-        const res = await axios.post(`http://localhost:5000/api/wishlist/${product._id}`);
+        const res = await api.post(`/api/wishlist/${product._id}`);
         setWishlistItems(res.data);
         setWishlistIds(new Set(res.data.map(p => p._id)));
       }

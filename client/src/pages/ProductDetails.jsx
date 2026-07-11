@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { ShoppingCart, ArrowLeft, ShieldCheck, Truck, RefreshCw, Heart, Trash2 } from 'lucide-react';
 import { CartContext } from '../context/CartContext';
 import { WishlistContext } from '../context/WishlistContext';
 import { AuthContext } from '../context/AuthContext';
 import StarRating from '../components/StarRating';
+import { getImageUrl } from '../utils/image';
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -35,7 +36,7 @@ const ProductDetails = () => {
 
   const fetchProduct = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/products/${id}`);
+      const res = await api.get(`/api/products/${id}`);
       setProduct(res.data);
     } catch (error) {
       console.error(error);
@@ -46,7 +47,7 @@ const ProductDetails = () => {
 
   const fetchReviews = async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/products/${id}/reviews`);
+      const res = await api.get(`/api/products/${id}/reviews`);
       setReviews(res.data.reviews);
       setAvgRating(res.data.avgRating);
       setReviewCount(res.data.count);
@@ -67,7 +68,7 @@ const ProductDetails = () => {
     setReviewError('');
     setReviewSuccess('');
     try {
-      await axios.post(`http://localhost:5000/api/products/${id}/reviews`, myReview);
+      await api.post(`/api/products/${id}/reviews`, myReview);
       setReviewSuccess('Your review has been submitted!');
       setMyReview({ rating: 0, comment: '' });
       fetchReviews(); // refresh the list
@@ -81,7 +82,7 @@ const ProductDetails = () => {
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm('Delete this review?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}/reviews/${reviewId}`);
+      await api.delete(`/api/products/${id}/reviews/${reviewId}`);
       fetchReviews();
     } catch (err) {
       alert('Failed to delete review.');
@@ -104,7 +105,7 @@ const ProductDetails = () => {
         {/* Image */}
         <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
           <img
-            src={product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`}
+            src={getImageUrl(product.image)}
             alt={product.name}
             style={{ width: '100%', height: 'auto', display: 'block' }}
           />

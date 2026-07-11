@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
@@ -39,7 +39,7 @@ const Auth = () => {
         };
 
     try {
-      const res = await axios.post(endpoint, payload);
+      const res = await api.post(endpoint, payload);
       login(res.data.user, res.data.token);
       navigate('/');
     } catch (err) {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { AuthContext } from '../context/AuthContext';
 import { Package, MapPin, Phone, Mail } from 'lucide-react';
 import { getImageUrl } from '../utils/image';
@@ -15,7 +15,7 @@ const Profile = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/orders/myorders');
+      const res = await api.get('/api/orders/myorders');
       setOrders(res.data);
     } catch (error) {
       console.error(error);
@@ -79,7 +79,7 @@ const Profile = () => {
 
                   <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
                     {order.cartItems.map((item, idx) => (
-                      <img key={idx} src={item.image.startsWith('http') ? item.image : `http://localhost:5000${item.image}`} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
+                      <img key={idx} src={getImageUrl(item.image)} alt={item.name} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px' }} />
                     ))}
                   </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { Trash2, Edit, X, Save } from 'lucide-react';
+import { getImageUrl } from '../utils/image';
 
 const categories = ['Flowers', 'Dolls', 'Toys', 'Decor', 'Accessories'];
 
@@ -16,7 +17,7 @@ const ManageProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/products');
+      const res = await api.get('/api/products');
       setProducts(res.data);
     } catch (error) {
       console.error(error);
@@ -26,7 +27,7 @@ const ManageProducts = () => {
   const deleteProduct = async (id) => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       try {
-        await axios.delete(`http://localhost:5000/api/products/${id}`);
+        await api.delete(`/api/products/${id}`);
         setProducts(products.filter(p => p._id !== id));
       } catch (error) {
         alert('Error deleting product');
@@ -58,7 +59,7 @@ const ManageProducts = () => {
   const saveEdit = async () => {
     setSaving(true);
     try {
-      const res = await axios.put(`http://localhost:5000/api/products/${editingProduct}`, editForm);
+      const res = await api.put(`/api/products/${editingProduct}`, editForm);
       setProducts(products.map(p => p._id === editingProduct ? res.data : p));
       closeEdit();
     } catch (error) {
@@ -87,7 +88,7 @@ const ManageProducts = () => {
               <tr key={product._id} style={{ borderBottom: '1px solid #eee' }}>
                 <td style={{ padding: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <img
-                    src={product.image.startsWith('http') ? product.image : `http://localhost:5000${product.image}`}
+                    src={getImageUrl(product.image)}
                     alt=""
                     style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }}
                   />
@@ -168,7 +169,7 @@ const ManageProducts = () => {
                 <input type="text" name="image" value={editForm.image} onChange={handleEditChange} placeholder="https://example.com/image.jpg" />
                 {editForm.image && (
                   <img
-                    src={editForm.image.startsWith('http') ? editForm.image : `http://localhost:5000${editForm.image}`}
+                    src={getImageUrl(editForm.image)}
                     alt="Preview"
                     style={{ width: '100%', height: '140px', objectFit: 'cover', borderRadius: '8px', marginTop: '10px' }}
                   />

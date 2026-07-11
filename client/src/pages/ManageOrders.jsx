@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
+import { getImageUrl } from '../utils/image';
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -11,7 +12,7 @@ const ManageOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const res = await axios.get('http://localhost:5000/api/orders');
+      const res = await api.get('/api/orders');
       setOrders(res.data);
     } catch (error) {
       console.error(error);
@@ -21,7 +22,7 @@ const ManageOrders = () => {
 
   const updateStatus = async (id, status) => {
     try {
-      await axios.put(`http://localhost:5000/api/orders/${id}`, {
+      await api.put(`/api/orders/${id}`, {
         orderStatus: status,
       });
 
@@ -317,7 +318,7 @@ const ManageOrders = () => {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                           {item.image && (
                                             <img
-                                              src={item.image}
+                                              src={getImageUrl(item.image)}
                                               alt={item.name}
                                               style={{
                                                 width: '50px',

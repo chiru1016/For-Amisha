@@ -1,5 +1,5 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { CartContext } from '../context/CartContext';
@@ -37,7 +37,7 @@ const Checkout = () => {
     setLoading(true);
 
     try {
-      const { data: order } = await axios.post('/api/orders/razorpay', {
+      const { data: order } = await api.post('/api/orders/razorpay', {
         cartItems: cartItems.map((item) => ({
           productId: item.productId,
           quantity: item.quantity,
@@ -55,7 +55,7 @@ const Checkout = () => {
 
         handler: async (response) => {
           try {
-            await axios.post('/api/orders/verify', {
+            await api.post('/api/orders/verify', {
               appOrderId: order.appOrderId,
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
