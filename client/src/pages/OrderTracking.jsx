@@ -6,8 +6,7 @@ import { getImageUrl } from '../utils/image';
 const steps = ['Paid', 'Packed', 'Shipped', 'Delivered'];
 
 const getStepIndex = (status) => {
-  if (status === 'Pending') return -1;
-  if (status === 'Cancelled') return -1;
+  if (!status || status === 'Pending' || status === 'Cancelled') return -1;
   return steps.indexOf(status);
 };
 
@@ -55,14 +54,24 @@ const OrderTracking = () => {
   }
 
   const activeStep = getStepIndex(order.orderStatus);
+  const progressPercent =
+    activeStep <= 0 ? 0 : (activeStep / (steps.length - 1)) * 100;
 
   return (
     <div className="container" style={{ padding: '50px 20px' }}>
-      <div className="card" style={{ padding: '30px', marginBottom: '30px' }}>
-        <h1 style={{ marginBottom: '10px' }}>Track Your Order</h1>
+      <div
+        className="card"
+        style={{
+          padding: '36px',
+          marginBottom: '30px',
+          border: '1px solid rgba(216, 77, 103, 0.25)',
+        }}
+      >
+        <h1 style={{ marginBottom: '12px' }}>Track Your Order</h1>
 
         <p style={{ color: 'var(--text-light)', marginBottom: '6px' }}>
-          Order Code: <strong>{order._id.slice(-10).toUpperCase()}</strong>
+          Order Code:{' '}
+          <strong>{order._id?.slice(-10).toUpperCase()}</strong>
         </p>
 
         <p style={{ color: 'var(--text-light)' }}>
@@ -76,59 +85,97 @@ const OrderTracking = () => {
 
         <div
           style={{
-            marginTop: '34px',
-            display: 'grid',
-            gridTemplateColumns: `repeat(${steps.length}, 1fr)`,
-            gap: '10px',
             position: 'relative',
+            marginTop: '50px',
+            padding: '0 20px',
           }}
         >
-          {steps.map((step, index) => {
-            const completed = index <= activeStep;
+          <div
+            style={{
+              position: 'absolute',
+              top: '17px',
+              left: '12%',
+              right: '12%',
+              height: '5px',
+              background: '#e5e7eb',
+              borderRadius: '999px',
+              zIndex: 1,
+            }}
+          />
 
-            return (
-              <div
-                key={step}
-                style={{
-                  textAlign: 'center',
-                  position: 'relative',
-                }}
-              >
+          <div
+            style={{
+              position: 'absolute',
+              top: '17px',
+              left: '12%',
+              height: '5px',
+              width: `${progressPercent * 0.76}%`,
+              background: '#22c55e',
+              borderRadius: '999px',
+              zIndex: 2,
+              transition: 'width 0.4s ease',
+            }}
+          />
+
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 3,
+              display: 'grid',
+              gridTemplateColumns: `repeat(${steps.length}, 1fr)`,
+              gap: '10px',
+            }}
+          >
+            {steps.map((step, index) => {
+              const completed = index <= activeStep;
+
+              return (
                 <div
+                  key={step}
                   style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '50%',
-                    margin: '0 auto 10px',
-                    background: completed ? '#22c55e' : '#e5e7eb',
-                    color: completed ? '#fff' : '#777',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: 800,
+                    textAlign: 'center',
                   }}
                 >
-                  {completed ? '✓' : index + 1}
-                </div>
+                  <div
+                    style={{
+                      width: '38px',
+                      height: '38px',
+                      borderRadius: '50%',
+                      margin: '0 auto 12px',
+                      background: completed ? '#22c55e' : '#e5e7eb',
+                      color: completed ? '#fff' : '#777',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 800,
+                      fontSize: '1rem',
+                      boxShadow: completed
+                        ? '0 6px 16px rgba(34, 197, 94, 0.3)'
+                        : 'none',
+                    }}
+                  >
+                    {completed ? '✓' : index + 1}
+                  </div>
 
-                <p
-                  style={{
-                    fontSize: '0.88rem',
-                    fontWeight: 700,
-                    color: completed ? '#16a34a' : '#777',
-                  }}
-                >
-                  {step}
-                </p>
-              </div>
-            );
-          })}
+                  <p
+                    style={{
+                      fontSize: '0.92rem',
+                      fontWeight: 800,
+                      color: completed ? '#16a34a' : '#777',
+                    }}
+                  >
+                    {step}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {order.orderStatus === 'Cancelled' && (
           <div
             style={{
-              marginTop: '25px',
+              marginTop: '30px',
               padding: '14px 18px',
               background: '#fee2e2',
               color: '#dc2626',
@@ -143,7 +190,7 @@ const OrderTracking = () => {
         {order.orderStatus === 'Delivered' && (
           <div
             style={{
-              marginTop: '25px',
+              marginTop: '30px',
               padding: '14px 18px',
               background: '#dcfce7',
               color: '#166534',
@@ -160,7 +207,7 @@ const OrderTracking = () => {
         <h2 style={{ marginBottom: '20px' }}>Order Details</h2>
 
         <div style={{ display: 'grid', gap: '16px' }}>
-          {order.cartItems.map((item, index) => (
+          {(order.cartItems || []).map((item, index) => (
             <div
               key={`${item.productId}-${index}`}
               style={{
@@ -190,7 +237,7 @@ const OrderTracking = () => {
                 </p>
               </div>
 
-              <strong>₹{item.price * item.quantity}</strong>
+              <strong>₹{Number(item.price || 0) * Number(item.quantity || 0)}</strong>
             </div>
           ))}
         </div>
@@ -211,8 +258,9 @@ const OrderTracking = () => {
 
       <div className="card" style={{ padding: '30px' }}>
         <h2 style={{ marginBottom: '15px' }}>Delivery Address</h2>
-        <p style={{ color: 'var(--text-light)', lineHeight: 1.7 }}>
-          {order.address}
+
+        <p style={{ color: 'var(--text-light)', lineHeight: 1.8 }}>
+          {order.address || 'Address not available'}
         </p>
       </div>
     </div>
