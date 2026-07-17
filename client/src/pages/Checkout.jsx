@@ -1,9 +1,12 @@
 import React, { useContext, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+
 import api from '../api';
 import { CartContext } from '../context/CartContext';
 import { AuthContext } from '../context/AuthContext';
 import { getImageUrl } from '../utils/image';
+
+const DELIVERY_CHARGE = 100;
 
 const Checkout = () => {
   const { cartItems, totalAmount, clearCart } = useContext(CartContext);
@@ -26,7 +29,7 @@ const Checkout = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const deliveryCharge = 100;
+  const deliveryCharge = DELIVERY_CHARGE;
   const payableAmount = Number(totalAmount || 0) + deliveryCharge;
 
   const handleChange = (e) => {
@@ -41,17 +44,33 @@ const Checkout = () => {
   };
 
   const validateAddress = () => {
-    if (!addressData.name.trim()) return 'Please enter your full name.';
+    if (!addressData.name.trim()) {
+      return 'Please enter your full name.';
+    }
+
     if (!/^[6-9]\d{9}$/.test(addressData.phone.trim())) {
       return 'Please enter a valid 10-digit mobile number.';
     }
+
     if (!/^\d{6}$/.test(addressData.pincode.trim())) {
       return 'Please enter a valid 6-digit pincode.';
     }
-    if (!addressData.area.trim()) return 'Please enter your area/locality.';
-    if (!addressData.addressLine.trim()) return 'Please enter full address.';
-    if (!addressData.city.trim()) return 'Please enter city/district/town.';
-    if (!addressData.state.trim()) return 'Please enter state.';
+
+    if (!addressData.area.trim()) {
+      return 'Please enter your area/locality.';
+    }
+
+    if (!addressData.addressLine.trim()) {
+      return 'Please enter full address.';
+    }
+
+    if (!addressData.city.trim()) {
+      return 'Please enter city/district/town.';
+    }
+
+    if (!addressData.state.trim()) {
+      return 'Please enter state.';
+    }
 
     return null;
   };
@@ -69,6 +88,12 @@ const Checkout = () => {
     ]
       .filter(Boolean)
       .join(', ');
+  };
+
+  const clearCartCompletely = () => {
+    clearCart();
+    localStorage.removeItem('cart');
+    localStorage.setItem('cart', JSON.stringify([]));
   };
 
   const handlePayment = async () => {
@@ -131,12 +156,13 @@ const Checkout = () => {
         payableAmount * 100;
 
       const key =
-        orderData.key ||
         orderData.keyId ||
+        orderData.key ||
         import.meta.env.VITE_RAZORPAY_KEY_ID;
 
       if (!razorpayOrderId || !appOrderId) {
         setError('Order creation failed. Please try again.');
+        setLoading(false);
         return;
       }
 
@@ -171,8 +197,7 @@ const Checkout = () => {
               razorpay_signature: response.razorpay_signature,
             });
 
-            clearCart();
-            localStorage.removeItem('cart');
+            clearCartCompletely();
 
             const paidOrderId =
               verifyRes.data?.order?._id ||
@@ -182,7 +207,14 @@ const Checkout = () => {
             navigate(`/orders/${paidOrderId}`, { replace: true });
           } catch (verifyError) {
             console.error('Payment verification error:', verifyError);
-            setError('Payment verification failed. Please contact support.');
+
+            setError(
+              verifyError.response?.data?.error ||
+                verifyError.response?.data?.message ||
+                'Payment verification failed. Please contact support.'
+            );
+          } finally {
+            setLoading(false);
           }
         },
 
@@ -203,7 +235,7 @@ const Checkout = () => {
           error.response?.data?.message ||
           'Unable to place order. Please try again.'
       );
-    } finally {
+
       setLoading(false);
     }
   };
@@ -213,9 +245,11 @@ const Checkout = () => {
       <div className="container" style={{ padding: '60px 20px' }}>
         <div className="card" style={{ padding: '35px', textAlign: 'center' }}>
           <h2>Your cart is empty</h2>
+
           <p style={{ margin: '12px 0 24px', color: 'var(--text-light)' }}>
             Add products before checkout.
           </p>
+
           <Link to="/products" className="btn-primary">
             Continue Shopping
           </Link>
@@ -225,20 +259,15 @@ const Checkout = () => {
   }
 
   return (
-    <div
-      className="container"
-      style={{
-        padding: '50px 20px',
-      }}
-    >
+    <div className="container" style={{ padding: '50px 20px' }}>
       <div
+        className="checkout-layout"
         style={{
           display: 'grid',
           gridTemplateColumns: '1.4fr 0.9fr',
           gap: '30px',
           alignItems: 'start',
         }}
-        className="checkout-layout"
       >
         <div className="card" style={{ padding: '34px' }}>
           <h1 style={{ marginBottom: '28px' }}>Add Shipping Address</h1>
@@ -388,7 +417,14 @@ const Checkout = () => {
           </div>
         </div>
 
-        <div className="card" style={{ padding: '30px', position: 'sticky', top: '100px' }}>
+        <div
+          className="card"
+          style={{
+            padding: '30px',
+            position: 'sticky',
+            top: '100px',
+          }}
+        >
           <div
             style={{
               display: 'flex',
@@ -432,17 +468,26 @@ const Checkout = () => {
 
                 <div>
                   <h4 style={{ fontSize: '0.95rem' }}>{item.name}</h4>
+
                   <p style={{ color: 'var(--text-light)', fontSize: '0.85rem' }}>
                     Qty: {item.quantity}
                   </p>
                 </div>
 
-                <strong>₹{Number(item.price || 0) * Number(item.quantity || 0)}</strong>
+                <strong>
+                  ₹{Number(item.price || 0) * Number(item.quantity || 0)}
+                </strong>
               </div>
             ))}
           </div>
 
-          <hr style={{ border: 'none', borderTop: '1px solid #eee', margin: '20px 0' }} />
+          <hr
+            style={{
+              border: 'none',
+              borderTop: '1px solid #eee',
+              margin: '20px 0',
+            }}
+          />
 
           <div style={{ display: 'grid', gap: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -452,10 +497,16 @@ const Checkout = () => {
 
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span>Delivery Charges</span>
-              <strong>{deliveryCharge === 0 ? 'Free' : `₹${deliveryCharge}`}</strong>
+              <strong>₹{deliveryCharge}</strong>
             </div>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '1.2rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                fontSize: '1.2rem',
+              }}
+            >
               <strong>Total Payable</strong>
               <strong>₹{payableAmount}</strong>
             </div>

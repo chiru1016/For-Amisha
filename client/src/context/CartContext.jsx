@@ -2,22 +2,27 @@ import React, { createContext, useState, useEffect } from 'react';
 
 export const CartContext = createContext();
 
+const CART_STORAGE_KEY = 'cart';
+
 const getStoredCart = () => {
   try {
-    const storedCart = localStorage.getItem('cart');
+    const storedCart = localStorage.getItem(CART_STORAGE_KEY);
 
-    if (!storedCart) return [];
+    if (!storedCart) {
+      return [];
+    }
 
     const parsedCart = JSON.parse(storedCart);
 
     if (!Array.isArray(parsedCart)) {
-      localStorage.removeItem('cart');
+      localStorage.removeItem(CART_STORAGE_KEY);
       return [];
     }
 
     return parsedCart;
   } catch (error) {
-    localStorage.removeItem('cart');
+    console.error('Invalid cart data. Clearing cart.', error);
+    localStorage.removeItem(CART_STORAGE_KEY);
     return [];
   }
 };
@@ -26,7 +31,7 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(getStoredCart);
 
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
   }, [cartItems]);
 
   const addToCart = (product) => {
@@ -40,7 +45,10 @@ export const CartProvider = ({ children }) => {
       if (itemExists) {
         return prevItems.map((item) =>
           item.productId === product._id
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: Number(item.quantity || 0) + 1,
+              }
             : item
         );
       }
@@ -50,7 +58,7 @@ export const CartProvider = ({ children }) => {
         {
           productId: product._id,
           name: product.name,
-          price: product.price,
+          price: Number(product.price),
           image: product.image,
           quantity: 1,
         },
@@ -65,18 +73,26 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateQuantity = (productId, quantity) => {
-    if (quantity < 1) return;
+    const newQuantity = Number(quantity);
+
+    if (!Number.isInteger(newQuantity) || newQuantity < 1) return;
 
     setCartItems((prevItems) =>
       prevItems.map((item) =>
-        item.productId === productId ? { ...item, quantity } : item
+        item.productId === productId
+          ? {
+              ...item,
+              quantity: newQuantity,
+            }
+          : item
       )
     );
   };
 
   const clearCart = () => {
     setCartItems([]);
-    localStorage.removeItem('cart');
+    localStorage.removeItem(CART_STORAGE_KEY);
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify([]));
   };
 
   const totalAmount = cartItems.reduce(
